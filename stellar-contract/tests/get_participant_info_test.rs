@@ -1,7 +1,9 @@
 #![cfg(test)]
 
 use soroban_sdk::{testutils::Address as _, Address, Env, String};
-use stellar_scavngr_contract::{ParticipantRole, ScavengerContract, ScavengerContractClient, WasteType};
+use stellar_scavngr_contract::{
+    ParticipantRole, ScavengerContract, ScavengerContractClient, WasteType,
+};
 
 // ========== Basic Functionality Tests ==========
 
@@ -21,12 +23,12 @@ fn test_get_participant_info_returns_participant_and_stats() {
 
     assert!(info.is_some());
     let info = info.unwrap();
-    
+
     // Verify participant data
     assert_eq!(info.participant.address, user);
     assert_eq!(info.participant.role, ParticipantRole::Collector);
     // registered_at is set by ledger timestamp (0 in test environment)
-    
+
     // Stats should be default/zero initially (no submissions yet)
     assert_eq!(info.stats.total_submissions, 0);
     assert_eq!(info.stats.total_weight, 0);
@@ -49,7 +51,7 @@ fn test_get_participant_info_with_stats() {
 
     // Get participant info
     let info = client.get_participant_info(&user).unwrap();
-    
+
     // Verify stats exist
     let stats = info.stats;
     assert_eq!(stats.participant, user);
@@ -79,7 +81,7 @@ fn test_get_participant_info_all_roles() {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, ScavengerContract);
     let client = ScavengerContractClient::new(&env, &contract_id);
-    
+
     let recycler = Address::generate(&env);
     let collector = Address::generate(&env);
     let manufacturer = Address::generate(&env);
@@ -97,7 +99,10 @@ fn test_get_participant_info_all_roles() {
     // Verify roles
     assert_eq!(recycler_info.participant.role, ParticipantRole::Recycler);
     assert_eq!(collector_info.participant.role, ParticipantRole::Collector);
-    assert_eq!(manufacturer_info.participant.role, ParticipantRole::Manufacturer);
+    assert_eq!(
+        manufacturer_info.participant.role,
+        ParticipantRole::Manufacturer
+    );
 }
 
 // ========== Statistics Integration Tests ==========
@@ -235,7 +240,7 @@ fn test_get_participant_info_multiple_participants() {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, ScavengerContract);
     let client = ScavengerContractClient::new(&env, &contract_id);
-    
+
     let user1 = Address::generate(&env);
     let user2 = Address::generate(&env);
     let user3 = Address::generate(&env);
@@ -384,6 +389,9 @@ fn test_get_participant_info_read_only() {
     let stats_after = info_after.stats;
 
     // Should be identical (read-only operation)
-    assert_eq!(stats_before.total_submissions, stats_after.total_submissions);
+    assert_eq!(
+        stats_before.total_submissions,
+        stats_after.total_submissions
+    );
     assert_eq!(stats_before.total_weight, stats_after.total_weight);
 }

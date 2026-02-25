@@ -1,4 +1,3 @@
-
 use soroban_sdk::{contracttype, Address, String, Symbol};
 
 /// Represents a transfer record in the recycling system
@@ -279,7 +278,6 @@ impl Incentive {
         }
         let reward = self.calculate_reward(weight_grams);
         reward <= self.remaining_budget
-
     }
 }
 
@@ -541,8 +539,8 @@ impl Waste {
     pub fn has_valid_coordinates(&self) -> bool {
         let max_lat = 90_000_000i128;
         let max_lon = 180_000_000i128;
-        
-        self.latitude >= -max_lat 
+
+        self.latitude >= -max_lat
             && self.latitude <= max_lat
             && self.longitude >= -max_lon
             && self.longitude <= max_lon
@@ -713,7 +711,6 @@ impl WasteBuilder {
         }
     }
 }
-
 
 /// Tracks recycling statistics for a participant
 #[contracttype]
@@ -1314,4 +1311,3 @@ mod tests {
         assert_ne!(ParticipantRole::Collector, ParticipantRole::Manufacturer);
     }
 }
-

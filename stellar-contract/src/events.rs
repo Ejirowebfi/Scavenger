@@ -4,6 +4,7 @@ use crate::types::WasteType;
 
 const WASTE_REGISTERED: Symbol = symbol_short!("recycled");
 const DONATION_MADE: Symbol = symbol_short!("donated");
+const TOKENS_REWARDED: Symbol = symbol_short!("rewarded");
 
 /// Emit event when waste is registered
 pub fn emit_waste_registered(
@@ -22,14 +23,13 @@ pub fn emit_waste_registered(
 }
 
 /// Emit event when a donation is made to charity
-pub fn emit_donation_made(
-    env: &Env,
-    donor: &Address,
-    amount: i128,
-    charity_contract: &Address,
-) {
-    env.events().publish(
-        (DONATION_MADE, donor),
-        (amount, charity_contract),
-    );
+pub fn emit_donation_made(env: &Env, donor: &Address, amount: i128, charity_contract: &Address) {
+    env.events()
+        .publish((DONATION_MADE, donor), (amount, charity_contract));
+}
+
+/// Emit event when tokens are rewarded to a participant
+pub fn emit_tokens_rewarded(env: &Env, waste_id: u64, recipient: &Address, amount: i128) {
+    env.events()
+        .publish((TOKENS_REWARDED, waste_id), (recipient, amount));
 }

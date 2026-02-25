@@ -1,7 +1,11 @@
 use soroban_sdk::{
-    symbol_short, testutils::{Address as _, Events}, Address, Env, IntoVal, Symbol, Vec,
+    symbol_short,
+    testutils::{Address as _, Events},
+    Address, Env, IntoVal, Symbol, Vec,
 };
-use stellar_scavngr_contract::{ParticipantRole, ScavengerContract, ScavengerContractClient, WasteType};
+use stellar_scavngr_contract::{
+    ParticipantRole, ScavengerContract, ScavengerContractClient, WasteType,
+};
 
 #[test]
 fn test_waste_registered_event_emitted() {
@@ -21,24 +25,16 @@ fn test_waste_registered_event_emitted() {
     let latitude: i128 = 40_500_000;
     let longitude: i128 = -74_000_000;
 
-    let waste_id = client.recycle_waste(
-        &waste_type,
-        &weight,
-        &recycler,
-        &latitude,
-        &longitude,
-    );
+    let waste_id = client.recycle_waste(&waste_type, &weight, &recycler, &latitude, &longitude);
 
     // Verify event was emitted
     let events = env.events().all();
     let event = events.last().unwrap();
 
     // Check event topics
-    let expected_topics: Vec<soroban_sdk::Val> = (
-        symbol_short!("recycled"),
-        waste_id,
-    ).into_val(&env);
-    
+    let expected_topics: Vec<soroban_sdk::Val> =
+        (symbol_short!("recycled"), waste_id).into_val(&env);
+
     assert_eq!(event.topics, expected_topics);
 
     // Check event data contains all required fields
@@ -69,27 +65,19 @@ fn test_waste_registered_event_fields() {
     ];
 
     for (waste_type, weight, lat, lon) in test_cases {
-        let waste_id = client.recycle_waste(
-            &waste_type,
-            &weight,
-            &recycler,
-            &lat,
-            &lon,
-        );
+        let waste_id = client.recycle_waste(&waste_type, &weight, &recycler, &lat, &lon);
 
         // Get the last event
         let events = env.events().all();
         let event = events.last().unwrap();
 
         // Verify waste_id in topics
-        let topics: Vec<soroban_sdk::Val> = (
-            symbol_short!("recycled"),
-            waste_id,
-        ).into_val(&env);
+        let topics: Vec<soroban_sdk::Val> = (symbol_short!("recycled"), waste_id).into_val(&env);
         assert_eq!(event.topics, topics);
 
         // Verify all fields in event data
-        let event_data: (WasteType, u128, Address, i128, i128) = event.data.try_into_val(&env).unwrap();
+        let event_data: (WasteType, u128, Address, i128, i128) =
+            event.data.try_into_val(&env).unwrap();
         assert_eq!(event_data.0, waste_type, "Waste type mismatch");
         assert_eq!(event_data.1, weight, "Weight mismatch");
         assert_eq!(event_data.2, recycler, "Recycler address mismatch");
@@ -138,10 +126,7 @@ fn test_waste_registered_event_multiple_wastes() {
     let event2 = &events_vec[events_vec.len() - 1];
 
     // Verify first waste event
-    let topics1: Vec<soroban_sdk::Val> = (
-        symbol_short!("recycled"),
-        waste_id1,
-    ).into_val(&env);
+    let topics1: Vec<soroban_sdk::Val> = (symbol_short!("recycled"), waste_id1).into_val(&env);
     assert_eq!(event1.topics, topics1);
 
     let data1: (WasteType, u128, Address, i128, i128) = event1.data.try_into_val(&env).unwrap();
@@ -149,10 +134,7 @@ fn test_waste_registered_event_multiple_wastes() {
     assert_eq!(data1.2, recycler1);
 
     // Verify second waste event
-    let topics2: Vec<soroban_sdk::Val> = (
-        symbol_short!("recycled"),
-        waste_id2,
-    ).into_val(&env);
+    let topics2: Vec<soroban_sdk::Val> = (symbol_short!("recycled"), waste_id2).into_val(&env);
     assert_eq!(event2.topics, topics2);
 
     let data2: (WasteType, u128, Address, i128, i128) = event2.data.try_into_val(&env).unwrap();
@@ -186,18 +168,13 @@ fn test_waste_registered_event_with_boundary_coordinates() {
     ];
 
     for (lat, lon) in boundary_tests {
-        let waste_id = client.recycle_waste(
-            &WasteType::PetPlastic,
-            &1500,
-            &recycler,
-            &lat,
-            &lon,
-        );
+        let waste_id = client.recycle_waste(&WasteType::PetPlastic, &1500, &recycler, &lat, &lon);
 
         let events = env.events().all();
         let event = events.last().unwrap();
 
-        let event_data: (WasteType, u128, Address, i128, i128) = event.data.try_into_val(&env).unwrap();
+        let event_data: (WasteType, u128, Address, i128, i128) =
+            event.data.try_into_val(&env).unwrap();
         assert_eq!(event_data.3, lat, "Latitude should match");
         assert_eq!(event_data.4, lon, "Longitude should match");
     }

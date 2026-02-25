@@ -86,10 +86,10 @@ fn test_get_waste_multiple_materials() {
 
     assert_eq!(w1.waste_type, WasteType::Plastic);
     assert_eq!(w1.weight, 1000);
-    
+
     assert_eq!(w2.waste_type, WasteType::Metal);
     assert_eq!(w2.weight, 2000);
-    
+
     assert_eq!(w3.waste_type, WasteType::Glass);
     assert_eq!(w3.weight, 3000);
 }
@@ -106,12 +106,18 @@ fn test_get_waste_after_verification() {
     env.mock_all_auths();
 
     // Register participants
-    client.register_participant(&submitter, &stellar_scavngr_contract::ParticipantRole::Collector);
-    client.register_participant(&verifier, &stellar_scavngr_contract::ParticipantRole::Recycler);
+    client.register_participant(
+        &submitter,
+        &stellar_scavngr_contract::ParticipantRole::Collector,
+    );
+    client.register_participant(
+        &verifier,
+        &stellar_scavngr_contract::ParticipantRole::Recycler,
+    );
 
     // Submit material
     let material = client.submit_material(&WasteType::Paper, &4000, &submitter, &description);
-    
+
     // Verify it's not verified initially
     let waste_before = client.get_waste(&material.id).unwrap();
     assert!(!waste_before.verified);
@@ -175,11 +181,26 @@ fn test_get_waste_all_waste_types() {
     let glass = client.submit_material(&WasteType::Glass, &5000, &user, &desc);
 
     // Verify all can be retrieved
-    assert_eq!(client.get_waste(&paper.id).unwrap().waste_type, WasteType::Paper);
-    assert_eq!(client.get_waste(&pet.id).unwrap().waste_type, WasteType::PetPlastic);
-    assert_eq!(client.get_waste(&plastic.id).unwrap().waste_type, WasteType::Plastic);
-    assert_eq!(client.get_waste(&metal.id).unwrap().waste_type, WasteType::Metal);
-    assert_eq!(client.get_waste(&glass.id).unwrap().waste_type, WasteType::Glass);
+    assert_eq!(
+        client.get_waste(&paper.id).unwrap().waste_type,
+        WasteType::Paper
+    );
+    assert_eq!(
+        client.get_waste(&pet.id).unwrap().waste_type,
+        WasteType::PetPlastic
+    );
+    assert_eq!(
+        client.get_waste(&plastic.id).unwrap().waste_type,
+        WasteType::Plastic
+    );
+    assert_eq!(
+        client.get_waste(&metal.id).unwrap().waste_type,
+        WasteType::Metal
+    );
+    assert_eq!(
+        client.get_waste(&glass.id).unwrap().waste_type,
+        WasteType::Glass
+    );
 }
 
 #[test]
@@ -217,7 +238,7 @@ fn test_get_waste_sequential_ids() {
     assert!(client.get_waste(&m1.id).is_some());
     assert!(client.get_waste(&m2.id).is_some());
     assert!(client.get_waste(&m3.id).is_some());
-    
+
     // Verify IDs are sequential
     assert_eq!(m2.id, m1.id + 1);
     assert_eq!(m3.id, m2.id + 1);
@@ -269,6 +290,6 @@ fn test_get_waste_error_handling() {
     assert!(client.get_waste(&1).is_none());
     assert!(client.get_waste(&100).is_none());
     assert!(client.get_waste(&999999).is_none());
-    
+
     // All should return None without panicking
 }

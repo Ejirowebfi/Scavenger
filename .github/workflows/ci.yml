@@ -1,0 +1,114 @@
+name: Stellar Contract CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+          
+      - name: Add wasm32 target
+        run: rustup target add wasm32-unknown-unknown
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Run library tests
+        run: cargo test --lib --package stellar-scavngr-contract
+        
+      - name: Run reentrancy guard tests
+        run: cargo test --package stellar-scavngr-contract --test reentrancy_guard_test
+        
+      - name: Run charity tests
+        run: cargo test --package stellar-scavngr-contract --test charity_test
+        
+      - name: Run percentage tests
+        run: cargo test --package stellar-scavngr-contract --test percentage_test
+        
+      - name: Run deactivate waste tests
+        run: cargo test --package stellar-scavngr-contract --test deactivate_waste_test
+        
+      - name: Run reset waste confirmation tests
+        run: cargo test --package stellar-scavngr-contract --test reset_waste_confirmation_test
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+          
+      - name: Add wasm32 target
+        run: rustup target add wasm32-unknown-unknown
+      
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+        
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+  build:
+    name: Build WASM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          
+      - name: Add wasm32 target
+        run: rustup target add wasm32-unknown-unknown
+      
+      - name: Build WASM
+        run: |
+          cd stellar-contract
+          cargo build --target wasm32-unknown-unknown --release
+          
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: stellar-contract-wasm
+          path: target/wasm32-unknown-unknown/release/*.wasm

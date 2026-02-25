@@ -1,7 +1,9 @@
 #![cfg(test)]
 
 use soroban_sdk::{testutils::Address as _, Address, Env, String};
-use stellar_scavngr_contract::{ScavengerContract, ScavengerContractClient, ParticipantRole, WasteType};
+use stellar_scavngr_contract::{
+    ParticipantRole, ScavengerContract, ScavengerContractClient, WasteType,
+};
 
 #[test]
 fn test_get_waste_transfer_history_returns_complete_history() {
@@ -35,13 +37,13 @@ fn test_get_waste_transfer_history_returns_complete_history() {
 
     // Verify complete history
     assert_eq!(history.len(), 2);
-    
+
     // First transfer
     let transfer1 = history.get(0).unwrap();
     assert_eq!(transfer1.waste_id, material.id);
     assert_eq!(transfer1.from, user1);
     assert_eq!(transfer1.to, user2);
-    
+
     // Second transfer
     let transfer2 = history.get(1).unwrap();
     assert_eq!(transfer2.waste_id, material.id);
@@ -55,7 +57,7 @@ fn test_get_waste_transfer_history_chronological_order() {
     env.ledger().with_mut(|li| {
         li.timestamp = 1000;
     });
-    
+
     let contract_id = env.register_contract(None, ScavengerContract);
     let client = ScavengerContractClient::new(&env, &contract_id);
 
@@ -76,12 +78,12 @@ fn test_get_waste_transfer_history_chronological_order() {
 
     // First transfer at timestamp 1000
     client.transfer_waste(&material.id, &user1, &user2, &note);
-    
+
     // Advance time
     env.ledger().with_mut(|li| {
         li.timestamp = 2000;
     });
-    
+
     // Second transfer at timestamp 2000
     client.transfer_waste(&material.id, &user2, &user3, &note);
 
@@ -90,10 +92,10 @@ fn test_get_waste_transfer_history_chronological_order() {
 
     // Verify chronological order
     assert_eq!(history.len(), 2);
-    
+
     let transfer1 = history.get(0).unwrap();
     let transfer2 = history.get(1).unwrap();
-    
+
     // First transfer should have earlier timestamp
     assert!(transfer1.transferred_at < transfer2.transferred_at);
     assert_eq!(transfer1.transferred_at, 1000);
@@ -127,7 +129,7 @@ fn test_get_waste_transfer_history_includes_all_details() {
 
     // Verify all details are included
     assert_eq!(history.len(), 1);
-    
+
     let transfer = history.get(0).unwrap();
     assert_eq!(transfer.waste_id, material.id);
     assert_eq!(transfer.from, sender);
@@ -270,7 +272,12 @@ fn test_get_waste_transfer_history_long_chain() {
     }
 
     // Submit material with first user
-    let material = client.submit_material(&WasteType::Paper, &5000, &users.get(0).unwrap(), &description);
+    let material = client.submit_material(
+        &WasteType::Paper,
+        &5000,
+        &users.get(0).unwrap(),
+        &description,
+    );
 
     // Create transfer chain: user0 -> user1 -> user2 -> user3 -> user4
     for i in 0..4 {
@@ -388,7 +395,7 @@ fn test_get_waste_transfer_history_all_waste_types() {
     for waste_type in waste_types {
         let material = client.submit_material(&waste_type, &1000, &user1, &description);
         client.transfer_waste(&material.id, &user1, &user2, &note);
-        
+
         let history = client.get_waste_transfer_history(&material.id);
         assert_eq!(history.len(), 1);
         assert_eq!(history.get(0).unwrap().waste_id, material.id);
@@ -423,7 +430,7 @@ fn test_get_waste_transfer_history_preserves_order_after_multiple_queries() {
     // Query history multiple times
     for _ in 0..5 {
         let history = client.get_waste_transfer_history(&material.id);
-        
+
         // Verify order is always the same
         assert_eq!(history.len(), 2);
         assert_eq!(history.get(0).unwrap().from, user1);
